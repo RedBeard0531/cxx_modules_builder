@@ -13,6 +13,7 @@ You can find an example configuration for
 To try it:
 
 ```bash
+# Apply patches and compile clang and ninja
 export PATH="path/to/patched/clang/bin:path/to/patched/ninja/bin:$PATH"
 git clone https://github.com/RedBeard0531/cxx_modules_builder
 git clone https://github.com/mathstuf/cxx-modules-sandbox
@@ -39,10 +40,13 @@ header_units:
   - path/to/header.h
   # As an optional convenience, you can use nesting to avoid duplicating
   # directories in all file lists.
-  - src/include:
-    - header1.h
-    - header2.h
-  # Absolute paths are also excepted.
+  - src:
+    - include:
+      - header1.h
+      - header2.h
+      - details:
+        - secrets.h
+  # Absolute paths are also accepted.
   - /usr/include/c++/v1:
     - algorithm
     - string
@@ -77,3 +81,23 @@ header_units:
     sources:
       - src/frobnicator.cpp
 ```
+
+## TODOs
+* Features
+  + [ ] Support basic settings on command line (compiler, build_root, etc)
+  + [ ] Support configuring the compiler flags without editing `header.ninja`
+  + [ ] Support choosing names other than `build.ninja` to keep multiple configs around
+  + [ ] Allow including `build.yml` files in subdirectories
+  + [ ] Globs in file lists
+* Implementation
+  + [ ] Use separate `rule`s for compiling from `.cpp` -> `.o` vs `.pcm` -> `.o`
+  + [ ] Use a better scanner
+  + [ ] Look into gcc support
+* Documentation
+  + [ ] More examples
+* External
+  + [ ] File issue with ninja so we won't need patch anymore (need minimal repro first)
+  + [ ] [ninja can't handle multiple outputs and `deps = gcc`](https://github.com/ninja-build/ninja/pull/1534)
+  + [ ] Keep an eye on clang bugs to remove patches and workarounds
+    * [ ] [deduction guides + header units = :cry:](https://bugs.llvm.org/show_bug.cgi?id=42639) 
+    * [ ] [`import` + `clang -E` = :skull:](https://bugs.llvm.org/show_bug.cgi?id=42472)
