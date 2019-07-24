@@ -1,7 +1,7 @@
 COMMONFLAGS = -stdlib=libc++ -pthread
 DEBUGFLAGS = -ggdb3 -gsplit-dwarf
-CXXFLAGS =  -fcolor-diagnostics -fPIC -Isrc -Ibuild/src  -Isrc/external/pegtl/include/tao/ -std=c++2a -DREALM_DEBUG=1 $COMMONFLAGS $DEBUGFLAGS
-LIBS = -lcrypto -lc++fs -lc++experimental
+CXXFLAGS =  -fcolor-diagnostics -fPIC -Isrc -Ibuild/src -std=c++2a $COMMONFLAGS $DEBUGFLAGS
+LIBS = -lc++fs -lc++experimental
 LINKFLAGS = -fuse-ld=lld $COMMONFLAGS
 #MODULE_CODEGEN = -Xclang -fmodules-debuginfo -Xclang -fmodules-codegen
 
