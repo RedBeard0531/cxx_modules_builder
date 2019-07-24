@@ -1,0 +1,138 @@
+header_units:
+  - /usr/include/:
+    - c++/v1:
+      - algorithm
+      - array
+      - atomic
+        # - cassert
+      - cctype
+      - cerrno
+      - cfloat
+      - chrono
+      - cinttypes
+      - climits
+      - clocale
+      - cmath
+      - codecvt
+      - condition_variable
+      - csignal
+      - cstdarg
+      # - cstddef # circular with type_traits??
+      - cstdint
+      - cstdio
+      - cstdlib
+      - cstring
+      - ctime
+      - cwchar
+      - deque
+      - exception
+      - filesystem
+      - fstream
+      - functional
+      - future
+      - initializer_list
+      - iomanip
+      - iosfwd
+      - iostream
+      - istream
+      - iterator
+      - limits
+      - list
+      - locale
+      - map
+      - memory
+      - mutex
+      - new
+      - numeric
+      - ostream
+      - optional
+      - queue
+      - random
+      - regex
+      - set
+      - sstream
+      - stack
+      - stdexcept
+      - streambuf
+      - string_view
+      - string
+      - system_error
+      - thread
+      - tuple
+      - typeinfo
+      - type_traits
+      - unordered_map
+      - unordered_set
+      - utility
+      - vector
+      - version
+  - header-units:
+    - internal/module.h
+libs:
+  simple:
+    libdeps: []
+    sources:
+      - simple:
+        - duplicate.mpp
+        - another.mpp
+        - use.mpp
+
+
+  header-units:
+    libdeps: []
+    sources:
+      - header-units:
+        - internal/module.mpp
+  partitions:
+    libdeps: []
+    sources:
+      - partitions:
+        - module.mpp
+        - parta.mpp
+        - partb.mpp
+
+        - impl.mpp
+
+
+  good-scanner:
+    libdeps: []
+    sources:
+      - good-scanner:
+        # These should trip up `sed`-level scanners.
+        - header-import.mpp
+        - macro-messiness.mpp
+        - import.mpp
+        - export.mpp
+        # Simple modules for use in other sources.
+        - mod.mpp
+        - other.mpp
+        # Import multiple modules on the same line.
+        # XXX this is now invalid and unsupported
+        # - multi-line.mpp
+
+  # XXX intentionally not supporting duplicates
+  # duplicates:
+  #   libdeps: []
+  #   sources:
+  #     - duplicates/duplicate.mpp
+  # duplicates-same-dir:
+  #   libdeps: []
+  #   sources:
+  #     - duplicates-same-dir/duplicate.mpp
+
+bins:
+  link-use:
+    libdeps:
+      - simple
+
+      # clang master doesn't support partitions yet
+      # - partitions
+      - good-scanner
+      - header-units
+    sources:
+      - link-use/use.mpp
+
+defaults:
+  - link-use
+  
+module_exclusions: []

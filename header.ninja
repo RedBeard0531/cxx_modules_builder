@@ -1,0 +1,79 @@
+COMMONFLAGS = -stdlib=libc++ -pthread
+DEBUGFLAGS = -ggdb3 -gsplit-dwarf
+CXXFLAGS =  -fcolor-diagnostics -fPIC -Isrc -Ibuild/src  -Isrc/external/pegtl/include/tao/ -std=c++2a -DREALM_DEBUG=1 $COMMONFLAGS $DEBUGFLAGS
+LIBS = -lcrypto -lc++fs -lc++experimental
+LINKFLAGS = -fuse-ld=lld $COMMONFLAGS
+#MODULE_CODEGEN = -Xclang -fmodules-debuginfo -Xclang -fmodules-codegen
+
+MODULE_SCAN_SED_SCRIPT = -E -e '$
+    s/^\s*(export\s+)?import\s+(<[^>]+>|"[^"]+")\s*;/#include \2\n/g ; $
+    s/^\s*(export\s+)?import\s+([^;]+);/__MN_FAKE_IMPORT__ \2;/g $
+    '
+MODULE_SCAN_AWK_SCRIPT = $
+    ' $
+    match($$0, "^\\s*__MN_FAKE_IMPORT__\\s+([^;]*);", m) { print m[1] } $
+    match($$0, "^\\s*((export)\\s+)?module\\s+([^;]*);", m) { mod = sprintf("module,%s,%s", m[2], m[3]) } END { if (mod) print(mod); }$
+    '
+
+rule SCAN
+    command = $CXX $CXXFLAGS -w -E -x $KIND $in -o /dev/null -MD -MF $out.d -MT $out && $MAKE_NINJA --scan $out.d $in $out $PCMFLAGS_FILE
+    description = SCAN $in
+    deps = gcc
+    depfile = $out.d
+    restat = 1
+
+rule HEADER_UNIT
+    command = $CXX $CXXFLAGS @$PCMFLAGS_FILE $MODULE_CODEGEN -c -x c++-header -fmodule-name=$in --precompile $$(realpath $in) -o $out -MD -MF $out.d
+    description = HEADER_UNIT $in
+    deps = gcc
+    depfile = $out.d
+    restat = 1
+
+rule HEADER_UNIT_CXX
+    command = $CXX $DEBUGFLAGS -c $in -o $out
+    description = HEADER_UNIT_CXX $out
+
+rule MAYBE_MODULE_SCAN
+    command = $
+        echo '#line 1 "$in"' > $out.rewrite.cpp && $
+        LC_ALL=C sed $MODULE_SCAN_SED_SCRIPT < $in >> $out.rewrite.cpp && $
+        $CXX $CXXFLAGS -w -E -x $KIND -iquote $$(dirname $in) -Xclang -main-file-name -Xclang $in $out.rewrite.cpp -o $out.ii -MD -MF $out.d -MT $out && $
+        LC_ALL=C gawk $MODULE_SCAN_AWK_SCRIPT < $out.ii > $out.ii.post && $
+        $MAKE_NINJA --maybe-module-scan $out.d $out.ii.post $in $out $PCMFLAGS_FILE
+    description = MAYBE_MODULE_SCAN $in
+    deps = gcc
+    depfile = $out.d
+    restat = 1
+
+rule CXXPRE
+    command = $CXX $CXXFLAGS --precompile -x c++-module -c @$out.flags $in -MD -MF $out.d -MT $out && touch $out
+    description = CXXPRE $in
+    deps = gcc
+    depfile = $out.d
+
+# TODO split out cpp->o and pcm->o into separate rules and remove -Wno-unused-command-line-argument
+rule CXX
+    command = rm -f $out.d; $CXX $CXXFLAGS -Wno-unused-command-line-argument -c @$FLAGS_FILE -MD -MF $out.d -o $out && if [ ! -e $out.d ]; then echo '$out : ' > $out.d; fi
+    description = CXX $in
+    deps = gcc
+    depfile = $out.d
+
+rule LINKSCAN
+    command = $MAKE_NINJA --link-scan $out $in
+    description = LINKSCAN $out
+    #deps = msvc
+    #msvc_deps_prefix = opening:
+    # restat = 1
+
+rule BIN
+    command = $CXX $LINKFLAGS -o $out -Wl,--start-group @$in.flags -Wl,--end-group $LIBS $EXTRALIBS
+    description = BIN $out
+    dyndep = $in
+    
+rule GENERATOR
+    command = $MAKE_NINJA
+    description = GENERATOR
+    generator = 1
+    restat = 1
+
+

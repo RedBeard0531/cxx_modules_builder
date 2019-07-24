@@ -1,0 +1,16 @@
+diff --git a/src/dyndep.cc b/src/dyndep.cc
+index 2aee601..5b43e99 100644
+--- a/src/dyndep.cc
++++ b/src/dyndep.cc
+@@ -95,7 +95,10 @@ bool DyndepLoader::UpdateEdge(Edge* edge, Dyndeps const* dyndeps,
+   for (std::vector<Node*>::const_iterator i =
+            dyndeps->implicit_outputs_.begin();
+        i != dyndeps->implicit_outputs_.end(); ++i) {
+-    if ((*i)->in_edge() != NULL) {
++    if (false && (*i)->in_edge() != NULL) {
++      edge->Dump("edge");
++      (*i)->in_edge()->Dump("in_edge");
++
+       *err = "multiple rules generate " + (*i)->path();
+       return false;
+     }

@@ -1,0 +1,20 @@
+diff --git a/clang/lib/AST/Decl.cpp b/clang/lib/AST/Decl.cpp
+index 21cf9da18a8..db93ceccd9e 100644
+--- a/clang/lib/AST/Decl.cpp
++++ b/clang/lib/AST/Decl.cpp
+@@ -1467,6 +1467,7 @@ LinkageInfo LinkageComputer::getLVForDecl(const NamedDecl *D,
+   D->setCachedLinkage(LV.getLinkage());
+   cache(D, computation, LV);
+ 
++#if 0
+ #ifndef NDEBUG
+   // In C (because of gnu inline) and in c++ with microsoft extensions an
+   // static can follow an extern, so we can have two decls with different
+@@ -1489,6 +1490,7 @@ LinkageInfo LinkageComputer::getLVForDecl(const NamedDecl *D,
+     }
+   }
+   assert(!Old || Old->getCachedLinkage() == D->getCachedLinkage());
++#endif
+ #endif
+ 
+   return LV;
